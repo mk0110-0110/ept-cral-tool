@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EPT — Cr/Al Execution Tool</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f2f5;color:#1a202c;font-size:13px}
+.topbar{background:#1a1a2e;height:52px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.brand{display:flex;align-items:center;gap:10px}
+.blogo{width:32px;height:32px;background:#f0c040;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#1a1a2e;flex-shrink:0}
+.bname{font-size:13px;font-weight:700;color:#f0c040}
+.bsub{font-size:10px;color:#718096}
+.tabs{display:flex;gap:2px}
+.tab{padding:5px 12px;border-radius:16px;border:none;font-size:11px;font-weight:600;cursor:pointer;background:transparent;color:#a0aec0;transition:all .15s}
+.tab.active{background:#f0c040;color:#1a1a2e}
+.tab:hover:not(.active){background:rgba(255,255,255,.08);color:#fff}
+
+/* SYNC BAR */
+.syncbar{background:#0f2d0f;border-bottom:2px solid #28a745;padding:8px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.sync-info{font-size:11px;color:#86efac;flex:1;display:flex;align-items:center;gap:8px}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:#28a745;flex-shrink:0;animation:pulse 2s infinite}
+.sync-dot.syncing{background:#f59e0b;animation:spin 1s linear infinite}
+.sync-dot.error{background:#dc3545;animation:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.sync-btn{padding:5px 13px;border-radius:7px;border:none;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s}
+.sync-btn.primary{background:#28a745;color:#fff}.sync-btn.primary:hover{background:#16a34a}
+.sync-btn.secondary{background:#f0c040;color:#1a1a2e}.sync-btn.secondary:hover{background:#d4a017}
+.sync-btn.danger{background:transparent;color:#f87171;border:1px solid #f87171}.sync-btn.danger:hover{background:#3d1515}
+.sync-user{font-size:10px;color:#4ade80;font-weight:700;background:#1a3d1a;padding:2px 8px;border-radius:8px}
+
+/* SUMBAR */
+.sumbar{background:#fff;border-bottom:1px solid #e2e8f0;padding:8px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700}
+.pill.g{background:#d4edda;color:#155724}.pill.o{background:#fff3cd;color:#856404}
+.pill.r{background:#f8d7da;color:#721c24}.pill.b{background:#dbeafe;color:#1e40af}.pill.y{background:#fef9c3;color:#713f12}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dot.r{background:#dc3545}.dot.o{background:#f59e0b}.dot.g{background:#28a745}.dot.b{background:#3b82f6}
+
+/* SHIFT BANNER */
+.shift-banner{background:#fff;border-bottom:2px solid #f0c040;padding:9px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.shift-banner label{font-size:11px;font-weight:700;color:#1a202c}
+.shift-banner select,.shift-banner input[type=date],.shift-banner input[type=number]{padding:5px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;color:#1a202c;background:#fff;outline:none}
+.shift-banner select:focus,.shift-banner input:focus{border-color:#f0c040}
+.sbanner-btn{padding:6px 13px;border-radius:7px;border:none;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s}
+.sbanner-btn.warn{background:#f0c040;color:#1a1a2e}.sbanner-btn.warn:hover{background:#d4a017}
+.sbanner-btn.reset{background:#f8d7da;color:#721c24;border:1px solid #f5c6c6}
+.shift-info{background:#fffbf0;border:1px solid #f0c040;border-radius:6px;padding:4px 10px;font-size:11px;color:#856404;font-weight:600;display:none}
+
+/* FILTER BAR */
+.fbar{background:#fff;border-bottom:1px solid #e2e8f0;padding:7px 16px;display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.flbl{font-size:10px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:.4px;margin-right:2px}
+.chip{padding:2px 9px;border-radius:10px;border:1px solid #e2e8f0;font-size:11px;cursor:pointer;background:#fff;color:#4a5568;font-weight:600;transition:all .15s}
+.chip:hover{border-color:#1a1a2e;color:#1a1a2e}
+.chip.active{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
+.fsep{width:1px;height:14px;background:#e2e8f0;margin:0 2px}
+
+/* TABLE */
+.main{padding:12px 16px}
+.tbl{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0;font-size:12px}
+.tbl th{background:#2d3748;color:#fff;padding:8px 9px;text-align:left;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+.tbl td{padding:7px 9px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#f8faff;cursor:pointer}
+.tbl tr.sec td{background:#2d3748 !important;color:#fff !important;font-weight:700;font-size:11px}
+.tbl tr.shifted td{background:#fffbf0 !important}
+.tbl tr.done-row td{opacity:.55}
+.res-b{display:inline-block;padding:1px 5px;border-radius:5px;font-size:10px;font-weight:600;background:#f0f4ff;color:#3730a3;margin:1px}
+.pred-b{display:inline-block;padding:1px 5px;border-radius:5px;font-size:10px;background:#f1f5f9;color:#64748b;margin:1px}
+.unsaved-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#f59e0b;margin-left:4px;vertical-align:middle}
+
+/* GANTT */
+.gwrap{padding:12px 16px;overflow-x:auto}
+.gc{min-width:900px}
+.ghdr{display:flex;background:#2d3748;border-radius:8px 8px 0 0;border:1px solid #e2e8f0;border-bottom:none}
+.ghl{width:220px;min-width:220px;padding:7px 9px;font-size:10px;font-weight:700;color:#a0aec0;text-transform:uppercase;border-right:1px solid #4a5568}
+.ghm{flex:1;display:flex}
+.gm{flex:1;text-align:center;padding:7px 2px;font-size:9px;font-weight:700;color:#a0aec0;text-transform:uppercase;border-right:1px solid #4a5568}
+.gm:last-child{border-right:none}
+.gbdy{border:1px solid #e2e8f0;border-radius:0 0 8px 8px;overflow:hidden;background:#fff}
+.grow{display:flex;border-bottom:1px solid #f1f5f9;min-height:26px}
+.grow:last-child{border-bottom:none}
+.grow.gs{background:#f8faff}
+.grow:hover{background:#f8faff}
+.grow.shifted-row{background:#fffbf0}
+.glbl{width:220px;min-width:220px;padding:3px 8px;border-right:1px solid #f1f5f9;display:flex;align-items:center;font-size:11px;color:#4a5568;overflow:hidden}
+.glbl.i1{padding-left:14px}.glbl.i2{padding-left:24px;font-size:10px;color:#94a3b8}.glbl.i3{padding-left:34px;font-size:10px;color:#94a3b8}
+.glbl.sh{font-weight:700;color:#1a202c}
+.gba{flex:1;position:relative;display:flex;align-items:center;padding:2px 0;overflow:hidden}
+.gbar{position:absolute;height:14px;border-radius:3px;display:flex;align-items:center;padding:0 4px;font-size:9px;font-weight:700;white-space:nowrap;overflow:hidden;min-width:3px;cursor:pointer;z-index:2}
+.gbar.b{background:#dbeafe;border:1px solid #3b82f6;color:#1e40af}
+.gbar.o{background:#fff3cd;border:1px solid #f59e0b;color:#856404}
+.gbar.r{background:#f8d7da;border:1px solid #dc3545;color:#721c24}
+.gbar.p{background:#e8d5ff;border:1px solid #7c3aed;color:#5b21b6}
+.gbar.g{background:#d4edda;border:1px solid #28a745;color:#155724}
+.gbar.shifted{border-style:dashed;border-width:2px}
+.gtdy{position:absolute;top:0;bottom:0;width:2px;background:#f0c040;z-index:5}
+.gleg{display:flex;gap:10px;padding:7px 12px;flex-wrap:wrap;border-top:1px solid #e2e8f0;background:#fff;border-radius:0 0 8px 8px}
+.gli{display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b}
+.glsq{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+
+/* EMAIL */
+.epanel{padding:12px 16px}
+.epgrid{display:grid;grid-template-columns:300px 1fr;gap:14px;align-items:start}
+.card{background:#fff;border-radius:10px;border:1px solid #e2e8f0;padding:12px}
+.card h3{font-size:11px;font-weight:700;color:#1a202c;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #f1f5f9}
+.fr{margin-bottom:8px}
+.fr label{font-size:10px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:3px}
+.fr input,.fr select{width:100%;border:1px solid #e2e8f0;border-radius:6px;padding:6px 8px;font-size:12px;color:#1a202c;background:#fff;outline:none;font-family:inherit}
+.fr input:focus{border-color:#f0c040}
+.rbtn{display:flex;gap:5px;flex-wrap:wrap}
+.rbtn button{padding:4px 11px;border-radius:7px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:#fff;color:#4a5568;transition:all .15s}
+.rbtn button.sel{background:#f0c040;color:#1a1a2e;border-color:#f0c040}
+.ulist{max-height:240px;overflow-y:auto}
+.uci{padding:7px 9px;border-radius:7px;border:1px solid #e2e8f0;margin-bottom:5px;cursor:pointer;transition:all .15s}
+.uci:hover,.uci.sel{border-color:#f0c040;background:#fffbf0}
+.uci.sel{box-shadow:0 0 0 2px rgba(240,192,64,.15)}
+.uci .ut{font-size:12px;font-weight:600;color:#1a202c}
+.uci .um{font-size:10px;color:#718096;margin-top:1px}
+.uci .ud{font-size:10px;font-weight:700;padding:1px 5px;border-radius:5px;float:right}
+.ud.d3{background:#f8d7da;color:#721c24}.ud.d7{background:#fff3cd;color:#856404}.ud.d15{background:#d4edda;color:#155724}
+.prev-card{background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden}
+.prev-topbar{background:#1a1a2e;padding:8px 12px;display:flex;align-items:center;justify-content:space-between}
+.prev-topbar span{color:#a0aec0;font-size:10px}
+.prev-topbar strong{color:#f0c040;font-size:11px;font-weight:700}
+.em-mock{padding:14px;font-family:'Segoe UI',sans-serif}
+.em-hdr{background:#1a1a2e;border-radius:7px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.em-logo{width:26px;height:26px;background:#f0c040;border-radius:5px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:10px;color:#1a1a2e;flex-shrink:0}
+.em-ttl{font-size:12px;font-weight:700;color:#f0c040}
+.em-stl{font-size:10px;color:#718096}
+.em-meta{background:#f8faff;border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:11px;color:#4a5568;border:1px solid #e2e8f0}
+.em-meta b{color:#1a202c}
+.em-sec{margin-bottom:12px}
+.em-sec-ttl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#718096;margin-bottom:5px;padding-bottom:4px;border-bottom:1px solid #f1f5f9}
+.em-task{background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:8px 10px;margin-bottom:5px}
+.em-tn{font-size:12px;font-weight:700;color:#1a202c;margin-bottom:3px}
+.em-tr{display:flex;gap:12px;font-size:11px;color:#4a5568;flex-wrap:wrap}
+.em-task.moved{border-left:3px solid #f59e0b}
+.em-task.urgent{border-left:3px solid #dc3545}
+.em-alert{background:#fffbf0;border:1px solid #f59e0b;border-radius:5px;padding:7px 10px;font-size:11px;color:#856404;margin-bottom:8px}
+.em-cont{background:#f0f4ff;border-radius:5px;padding:8px 10px;font-size:11px;color:#3730a3;margin-bottom:8px}
+.em-foot{font-size:10px;color:#94a3b8;text-align:center;padding-top:8px;border-top:1px solid #f1f5f9}
+.send-btn{width:100%;background:#1a1a2e;color:#f0c040;border:none;border-radius:7px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;margin-top:8px}
+.send-btn:hover{background:#2d3748}
+.send-ok{background:#d4edda;color:#155724;border-radius:7px;padding:7px;font-size:12px;font-weight:600;text-align:center;margin-top:6px;display:none}
+
+/* CONTACTS */
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;padding:12px 16px}
+.cc{background:#fff;border-radius:10px;border:1px solid #e2e8f0;padding:12px}
+.cc-hd{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.cc-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0}
+.cc-nm{font-size:12px;font-weight:700;color:#1a202c}
+.cc-rl{font-size:10px;color:#718096}
+.cc-f{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.cc-f label{color:#94a3b8;font-weight:600;font-size:10px;min-width:36px}
+.cc-f input{flex:1;border:1px solid #e2e8f0;border-radius:5px;padding:3px 7px;font-size:11px;color:#1a202c;background:#fff;outline:none}
+.cc-f input:focus{border-color:#f0c040}
+
+/* CHANGELOG */
+.changelog{padding:12px 16px}
+.cl-item{background:#fff;border-radius:8px;margin-bottom:7px;padding:9px 13px;border:1px solid #e2e8f0;border-left:3px solid #f0c040}
+.cl-time{font-size:10px;color:#94a3b8;font-weight:600;margin-bottom:2px}
+.cl-desc{font-size:12px;color:#1a202c;font-weight:500}
+.cl-detail{font-size:11px;color:#64748b;margin-top:2px}
+
+/* DETAIL OVERLAY */
+.overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:200;align-items:flex-start;justify-content:flex-end;padding:12px}
+.overlay.open{display:flex}
+.dpanel{background:#fff;width:420px;max-height:88vh;border-radius:10px;overflow-y:auto;border:1px solid #e2e8f0;box-shadow:0 8px 32px rgba(0,0,0,.15)}
+.dh{padding:12px 12px 8px;border-bottom:1px solid #f1f5f9;position:sticky;top:0;background:#fff;z-index:1}
+.dt{font-size:13px;font-weight:700;color:#1a202c;line-height:1.3;margin-bottom:2px}
+.ds-sub{font-size:10px;color:#94a3b8}
+.dcls{float:right;background:#f1f5f9;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:13px;color:#64748b;line-height:24px;text-align:center}
+.db{padding:12px}
+.db-sec{margin-bottom:12px}
+.db-sec h3{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#94a3b8;margin-bottom:6px}
+.abox{border-radius:5px;padding:8px 10px;margin-bottom:6px;border-left:3px solid}
+.abox.r{background:#fef2f2;border-color:#dc3545}.abox.o{background:#fffbeb;border-color:#f59e0b}
+.abox.g{background:#f0fdf4;border-color:#16a34a}.abox.b{background:#eff6ff;border-color:#3b82f6}
+.abox .ah{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.abox.r .ah{color:#dc3545}.abox.o .ah{color:#d97706}.abox.g .ah{color:#16a34a}.abox.b .ah{color:#3b82f6}
+.abox p{font-size:11px;line-height:1.4;color:#374151}
+.einp{width:100%;border:1px solid #e2e8f0;border-radius:5px;padding:5px 7px;font-size:12px;color:#1a202c;background:#fff;outline:none}
+.einp:focus{border-color:#f0c040}
+.esel{width:100%;border:1px solid #e2e8f0;border-radius:5px;padding:5px 7px;font-size:12px;color:#374151;background:#fff}
+.action-btn{background:#1a1a2e;color:#fff;border:none;border-radius:5px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;margin-top:6px;margin-right:4px}
+.action-btn:hover{background:#2d3748}
+.action-btn.gold{background:#f0c040;color:#1a1a2e}
+.action-btn.gold:hover{background:#d4a017}
+.action-btn.green{background:#28a745;color:#fff}
+.action-btn.green:hover{background:#16a34a}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;padding:10px 18px;border-radius:8px;font-size:12px;font-weight:600;z-index:999;display:none;box-shadow:0 4px 16px rgba(0,0,0,.15)}
+.toast.success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+.toast.error{background:#f8d7da;color:#721c24;border:1px solid #f5c6c6}
+.toast.info{background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe}
+.toast.show{display:block;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="brand">
+    <div class="blogo">EPT</div>
+    <div>
+      <div class="bname">EPT — Cr/Al Execution Tool</div>
+      <div class="bsub">USLV Clearview &nbsp;|&nbsp; MK / SG / HG &nbsp;|&nbsp; <span id="sp-status-top">Connecting to SharePoint...</span></div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="showV('schedule',this)">Schedule</button>
+    <button class="tab" onclick="showV('gantt',this)">Gantt</button>
+    <button class="tab" onclick="showV('reminders',this)">Reminders</button>
+    <button class="tab" onclick="showV('contacts',this)">Contacts</button>
+    <button class="tab" onclick="showV('changelog',this)">Change Log</button>
+  </div>
+</div>
+
+<!-- SYNC BAR -->
+<div class="syncbar">
+  <div class="sync-info">
+    <div class="sync-dot" id="sync-dot"></div>
+    <span id="sync-msg">Loading schedule from SharePoint...</span>
+    <span class="sync-user" id="sync-user"></span>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button class="sync-btn primary" onclick="syncFromSP()">↻ Refresh from SharePoint</button>
+    <button class="sync-btn secondary" onclick="pushAllToSP()">↑ Push all changes to SharePoint</button>
+    <span id="unsaved-count" style="font-size:10px;color:#fbbf24;display:none"></span>
+  </div>
+</div>
+
+<!-- SUMBAR -->
+<div class="sumbar">
+  <span class="pill b"><span class="dot b"></span>153 tasks · dependency graph loaded</span>
+  <span class="pill r"><span class="dot r"></span><span id="c3">0</span> due in 3d</span>
+  <span class="pill o"><span class="dot o"></span><span id="c7">0</span> due in 7d</span>
+  <span class="pill g"><span class="dot g"></span><span id="c15">0</span> due in 15d</span>
+  <span class="pill y" id="shifted-pill" style="display:none">Shifted</span>
+  <span style="margin-left:auto;font-size:10px;color:#94a3b8;font-weight:600">
+    Today: <input id="today-inp" type="date" style="font-size:10px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:5px;color:#1a202c;background:#fff" onchange="setToday(this.value)">
+  </span>
+</div>
+
+<!-- SHIFT BANNER -->
+<div class="shift-banner">
+  <label>Move schedule:</label>
+  <select id="shift-mode" onchange="toggleShiftInput()">
+    <option value="newstart">New project start date</option>
+    <option value="offset">Shift by N days (±)</option>
+  </select>
+  <input id="shift-date" type="date">
+  <input id="shift-days" type="number" placeholder="e.g. +30 or -7" style="width:110px;display:none">
+  <button class="sbanner-btn warn" onclick="applyShift()">Apply &amp; Cascade All</button>
+  <button class="sbanner-btn reset" onclick="resetShift()">Reset Shift</button>
+  <div class="shift-info" id="shift-info"></div>
+  <span style="font-size:10px;color:#718096;font-style:italic">All predecessor-linked tasks cascade automatically · Saved to SharePoint</span>
+</div>
+
+<!-- VIEWS -->
+<div id="v-schedule">
+  <div class="fbar">
+    <span class="flbl">Section:</span>
+    <button class="chip active" onclick="filt('sec','all',this)">All</button>
+    <button class="chip" onclick="filt('sec','PreConstruction',this)">Pre-Construction</button>
+    <button class="chip" onclick="filt('sec','Construction',this)">Construction</button>
+    <button class="chip" onclick="filt('sec','DustCollectors',this)">Dust Collectors</button>
+    <button class="chip" onclick="filt('sec','Electrical',this)">Electrical</button>
+    <button class="chip" onclick="filt('sec','Closeout',this)">Closeout</button>
+    <span class="fsep"></span>
+    <span class="flbl">Res:</span>
+    <button class="chip" onclick="filt('res','Intratech',this)">Intratech</button>
+    <button class="chip" onclick="filt('res','Delta',this)">Delta</button>
+    <button class="chip" onclick="filt('res','Padgett',this)">Padgett</button>
+    <button class="chip" onclick="filt('res','Blue Grass',this)">Blue Grass</button>
+    <span class="fsep"></span>
+    <button class="chip" onclick="filt('changed','changed',this)">Changed only</button>
+    <button class="chip" onclick="filt('upcoming','upcoming',this)">Upcoming 30d</button>
+  </div>
+  <div class="main">
+    <table class="tbl">
+      <thead><tr>
+        <th style="width:26px">#</th>
+        <th style="width:230px">Activity</th>
+        <th>Original Start</th><th>Current Start</th><th>Finish</th><th>Dur</th>
+        <th>Predecessors</th><th>Resources</th><th style="width:52px">In</th><th style="width:75px">Status</th>
+      </tr></thead>
+      <tbody id="stbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="v-gantt" style="display:none">
+  <div class="fbar">
+    <span class="flbl">Section:</span>
+    <button class="chip active" onclick="filtG('all',this)">All</button>
+    <button class="chip" onclick="filtG('PreConstruction',this)">Pre-Construction</button>
+    <button class="chip" onclick="filtG('Construction',this)">Construction</button>
+    <button class="chip" onclick="filtG('DustCollectors',this)">Dust Collectors</button>
+    <button class="chip" onclick="filtG('Electrical',this)">Electrical</button>
+    <button class="chip" onclick="filtG('Closeout',this)">Closeout</button>
+    <span class="fsep"></span>
+    <span style="font-size:10px;color:#94a3b8">Ghost = original · Dashed = shifted · Gold line = today</span>
+  </div>
+  <div class="gwrap"><div class="gc" id="gantt-c"></div></div>
+</div>
+
+<div id="v-reminders" style="display:none">
+  <div class="epanel">
+    <div class="epgrid">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="card">
+          <h3>PM Settings</h3>
+          <div class="fr"><label>PM Name</label><input id="pm-name" value="Muzammil Khan"></div>
+          <div class="fr"><label>PM Email</label><input id="pm-email" value="m.khan@clariant.com"></div>
+          <div class="fr"><label>PM Phone</label><input id="pm-phone" value="+1 (555) 214-7890"></div>
+          <div class="fr"><label>Project</label><input id="proj-name" value="USLV Clearview — Cr/Al"></div>
+        </div>
+        <div class="card">
+          <h3>Reminder Window</h3>
+          <div class="rbtn">
+            <button class="sel" onclick="selRem(15,this)">15-day</button>
+            <button onclick="selRem(7,this)">7-day</button>
+            <button onclick="selRem(3,this)">3-day</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Upcoming Activities <span id="uc-cnt" style="background:#f0c040;color:#1a1a2e;padding:1px 6px;border-radius:7px;font-size:10px;font-weight:700;margin-left:4px"></span></h3>
+          <div class="ulist" id="ulist"></div>
+        </div>
+      </div>
+      <div>
+        <div class="prev-card">
+          <div class="prev-topbar"><strong>Email Preview</strong><span id="prev-lbl">Select an activity</span></div>
+          <div id="email-preview" style="padding:12px;color:#94a3b8;font-size:12px;min-height:180px;display:flex;align-items:center;justify-content:center">
+            Select an activity to preview the reminder email
+          </div>
+        </div>
+        <button class="send-btn" onclick="sendEmail()">Send Reminder Email</button>
+        <div class="send-ok" id="send-ok">Reminder sent to resource contact(s)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="v-contacts" style="display:none">
+  <div class="cgrid" id="cgrid"></div>
+</div>
+
+<div id="v-changelog" style="display:none">
+  <div class="fbar">
+    <span class="flbl">Every change is saved to SharePoint — full audit trail</span>
+    <button class="chip" style="margin-left:auto;border-color:#f5c6c6;color:#721c24" onclick="clearChangelog()">Clear Local Log</button>
+  </div>
+  <div class="changelog" id="changelog-body">
+    <div style="color:#94a3b8;font-size:12px;text-align:center;padding:24px">Loading...</div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeD(event)">
+  <div class="dpanel" id="dpanel"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// SHAREPOINT CONFIG — your site URL and list name
+// ═══════════════════════════════════════════════════════════════════
+const SP_SITE = 'https://clariant.sharepoint.com/sites/TSM-03211';
+const SP_LIST = 'EPT_Schedule';
+const SP_API  = `${SP_SITE}/_api/web/lists/getbytitle('${SP_LIST}')/items`;
+
+// ═══════════════════════════════════════════════════════════════════
+// BASELINE TASK DATA (from MPP — original dates, never overwritten)
+// ═══════════════════════════════════════════════════════════════════
+const BASELINE = [
+ [0,'CrAl Project Schedule','Root',1,'2025-06-30','2026-11-12',358.5,[],[]],
+ [1,'ELT Approval','Engineering',1,'2025-06-30','2025-06-30',0,[],[]],
+ [2,'Detailed Engineering','Engineering',1,'2025-10-21','2026-02-09',80,[{p:1,t:'FS',l:0}],['CFW']],
+ [3,'MTO - Finals','Engineering',2,'2026-01-13','2026-02-09',21,[{p:2,t:'FS',l:-1}],['CFW']],
+ [4,'IFCs issued','Engineering',2,'2026-01-20','2026-02-16',21,[{p:3,t:'FS',l:-15}],['CFW']],
+ [5,'Place POs for Long lead items','Procurement',1,'2025-12-09','2026-05-01',104,[],[]],
+ [6,'PO for Dust Collectors','Procurement',2,'2026-01-12','2026-04-17',70,[{p:25,t:'SS',l:-20}],['PM']],
+ [7,'PO for Eductor','Procurement',2,'2025-12-15','2026-05-01',100,[{p:25,t:'SS',l:-24}],['PM']],
+ [8,'PO for Heat Exchanger','Procurement',2,'2025-12-09','2026-03-10',66,[{p:25,t:'SS',l:-16}],['PM']],
+ [9,'Receive long lead items','Procurement',1,'2026-02-24','2026-05-01',49,[],[]],
+ [10,'Place installation POs','Procurement',1,'2025-12-31','2026-02-10',30,[],['PM']],
+ [11,'Issue POs for equipment','Procurement',1,'2026-01-20','2026-02-09',15,[{p:2,t:'FS',l:-15}],['PM']],
+ [12,'Structural steel fabrication','Procurement',1,'2026-03-09','2026-05-29',63,[{p:25,t:'SS',l:-3}],['Padgett']],
+ [13,'Receive equipment','Procurement',1,'2026-05-04','2026-05-29',21,[{p:6,t:'FS',l:0},{p:7,t:'FS',l:0},{p:8,t:'FS',l:0}],[]],
+ [14,'PreConstruction','PreConstruction',1,'2026-02-17','2026-04-20',45,[],[],true],
+ [15,'Hot Dog Tank','PreConstruction',2,'2026-02-17','2026-03-04',12,[],[]],
+ [16,'Permits / LOTO','PreConstruction',3,'2026-02-17','2026-02-17',0.25,[{p:10,t:'FS',l:0},{p:4,t:'FS',l:0}],['Operations']],
+ [17,'Disconnect piping to water tank','PreConstruction',3,'2026-02-17','2026-02-18',1,[{p:16,t:'FS',l:0}],['Intratech']],
+ [18,'Remove water tank','PreConstruction',3,'2026-03-02','2026-03-04',3,[{p:17,t:'FS',l:0}],['Intratech']],
+ [19,'Eductor Pre-Work','PreConstruction',2,'2026-03-02','2026-04-03',25,[],[]],
+ [20,'Pour Pump Pad Concrete','PreConstruction',3,'2026-03-02','2026-03-02',1,[],['Risinger']],
+ [21,'Place pump','PreConstruction',3,'2026-04-01','2026-04-02',2,[{p:20,t:'FS',l:0}],['Intratech']],
+ [22,'Install Pump Seal Pot','PreConstruction',3,'2026-04-03','2026-04-03',1,[{p:21,t:'FS',l:0}],['Intratech']],
+ [23,'Receive Dust Collectors','PreConstruction',2,'2026-02-24','2026-02-24',0.5,[],[]],
+ [24,'Pre-Construction Area Dust Testing','PreConstruction',2,'2026-04-01','2026-04-20',14,[],['Clariant']],
+ [25,'Construction','Construction',1,'2025-06-30','2026-11-12',358.5,[],[],true],
+ [26,'Construction/Safety Manager Orientation','Construction',2,'2026-05-19','2026-05-19',0.25,[{p:2,t:'FS',l:0},{p:3,t:'FS',l:0},{p:4,t:'FS',l:0}],['CM','SM']],
+ [27,'Setup Receiving Yard','Construction',2,'2026-05-20','2026-05-20',1,[{p:26,t:'FS',l:0}],['CM']],
+ [28,'Construction Crew Safety Orientation','Construction',2,'2026-05-21','2026-05-21',0.25,[{p:27,t:'FS',l:0}],['Safety']],
+ [29,'Sprinkler','Construction',2,'2026-06-30','2026-07-09',8,[],[]],
+ [30,'Erect Scaffolding for Sprinkler','Construction',3,'2026-06-30','2026-07-02',3,[],['Safeway']],
+ [31,'Lockout Sprinkler System','Construction',3,'2026-07-03','2026-07-03',0.5,[{p:30,t:'FS',l:0}],['Brown']],
+ [32,'Move Sprinkler Lines','Construction',3,'2026-07-03','2026-07-07',2,[{p:31,t:'FS',l:0}],['Brown']],
+ [33,'Unlock Sprinkler System','Construction',3,'2026-07-07','2026-07-07',0.5,[{p:32,t:'FS',l:0}],['Brown']],
+ [34,'Remove Scaffolding','Construction',3,'2026-07-08','2026-07-09',2,[{p:33,t:'FS',l:0}],['Safeway']],
+ [35,'Eductor Pumps','Construction',2,'2026-06-01','2026-06-08',6,[],[]],
+ [36,'Install Eductor Pump Piping','Construction',3,'2026-06-01','2026-06-04',4,[{p:21,t:'FS',l:0},{p:22,t:'FS',l:0},{p:28,t:'FS',l:0}],['Intratech']],
+ [37,'Install Eductor Pump E&I','Construction',3,'2026-06-05','2026-06-08',2,[{p:21,t:'FS',l:0},{p:22,t:'FS',l:0},{p:36,t:'FS',l:0}],['Delta']],
+ [38,'Eductor Tank','Construction',2,'2026-06-01','2026-06-18',14,[],[]],
+ [39,'Str Steel for Eductor Tank','Construction',3,'2026-06-01','2026-06-01',1,[],['Padgett']],
+ [40,'Rig Eductor Tank','Construction',3,'2026-06-08','2026-06-08',1,[{p:39,t:'FS',l:0}],['Intratech']],
+ [41,'Install Eductor Tank','Construction',3,'2026-06-09','2026-06-09',1,[{p:40,t:'FS',l:0}],['Intratech']],
+ [42,'Install Piping to eductor tank','Construction',3,'2026-06-10','2026-06-18',7,[{p:41,t:'FS',l:0}],['Intratech']],
+ [43,'Install Instrumentation on Eductor tank','Construction',3,'2026-06-10','2026-06-12',3,[{p:41,t:'FS',l:0}],['Delta']],
+ [44,'Eductor','Construction',2,'2026-06-03','2026-06-22',14,[],[]],
+ [45,'Demo and Reroute water piping','Construction',3,'2026-06-03','2026-06-04',2,[],['Intratech']],
+ [46,'Demo spraydown','Construction',3,'2026-06-05','2026-06-05',1,[{p:45,t:'FS',l:0}],['Intratech']],
+ [47,'Str Steel for Eductor','Construction',3,'2026-06-08','2026-06-08',1,[{p:46,t:'FS',l:0}],['Padgett']],
+ [48,'Rig eductor to 3rd floor','Construction',3,'2026-06-09','2026-06-09',1,[{p:47,t:'FS',l:0},{p:46,t:'FS',l:0}],['Intratech']],
+ [49,'Install Eductor','Construction',3,'2026-06-10','2026-06-11',2,[{p:45,t:'FS',l:0},{p:48,t:'FS',l:0}],['Intratech']],
+ [50,'Preliminary piping','Construction',3,'2026-06-12','2026-06-22',7,[{p:49,t:'FS',l:0}],['Intratech']],
+ [51,'Heat Exchanger','Construction',2,'2026-06-30','2026-07-16',13,[],[]],
+ [52,'Str Steel for HX','Construction',3,'2026-06-30','2026-06-30',1,[],['Padgett']],
+ [53,'Cut holes for HX position','Construction',3,'2026-07-01','2026-07-02',2,[{p:52,t:'FS',l:0}],['Intratech']],
+ [54,'Rig and place HX','Construction',3,'2026-07-03','2026-07-06',2,[{p:53,t:'FS',l:0}],['Intratech']],
+ [55,'Install Heat Exchanger','Construction',3,'2026-07-07','2026-07-08',2,[{p:54,t:'FS',l:0}],['Intratech']],
+ [56,'Piping (HX)','Construction',3,'2026-07-09','2026-07-14',4,[{p:55,t:'FS',l:0}],['Intratech']],
+ [57,'Complete HX tie-ins','Construction',3,'2026-07-15','2026-07-15',1,[{p:56,t:'FS',l:0}],['Intratech']],
+ [58,'HX Instrumentation','Construction',3,'2026-07-15','2026-07-16',2,[{p:54,t:'FS',l:0},{p:56,t:'FS',l:0}],['Delta']],
+ [59,'Complete Eductor Piping','Construction',2,'2026-07-17','2026-07-17',1,[{p:38,t:'FS',l:0},{p:35,t:'FS',l:0},{p:51,t:'FS',l:0},{p:44,t:'FS',l:0}],['Intratech']],
+ [60,'Complete Eductor Instrumentation','Construction',2,'2026-07-20','2026-07-20',1,[{p:59,t:'FS',l:0}],['Delta']],
+ [61,'Dust Collector DC-422','DustCollectors',2,'2026-07-10','2026-08-18',28,[{p:29,t:'FS',l:0}],[]],
+ [62,'I&E Disconnect (DC-422)','DustCollectors',3,'2026-07-10','2026-07-10',1,[],['Delta']],
+ [63,'Demo old and remove DC-411','DustCollectors',3,'2026-07-13','2026-07-17',5,[{p:62,t:'FS',l:0}],['Intratech']],
+ [64,'Str Steel for DCs (DC-422)','DustCollectors',3,'2026-07-20','2026-07-21',2,[{p:63,t:'FS',l:0}],['Padgett']],
+ [65,'Roof Penetration (DC-422)','DustCollectors',3,'2026-07-22','2026-07-22',1,[{p:64,t:'FS',l:0}],['Intratech']],
+ [66,'Str for stack (DC-422)','DustCollectors',3,'2026-07-23','2026-07-23',1,[{p:65,t:'FS',l:0}],['Padgett']],
+ [67,'Rig Dust Collector (DC-422)','DustCollectors',3,'2026-07-22','2026-07-24',3,[{p:64,t:'FS',l:0}],['Intratech']],
+ [68,'Install DC-422 in place','DustCollectors',3,'2026-07-27','2026-07-31',5,[{p:67,t:'FS',l:0},{p:34,t:'FS',l:0}],['Intratech']],
+ [69,'Install Fan (DC-422)','DustCollectors',3,'2026-08-03','2026-08-04',2,[{p:68,t:'FS',l:0}],['Intratech']],
+ [70,'Install Preliminary Ducting (DC-422)','DustCollectors',3,'2026-08-05','2026-08-18',10,[{p:68,t:'FS',l:0},{p:69,t:'FS',l:0}],['Intratech']],
+ [71,'Install wiring instrumentation (DC-422)','DustCollectors',3,'2026-08-06','2026-08-10',3,[{p:72,t:'FS',l:0}],['Delta']],
+ [72,'Install Stack (DC-422)','DustCollectors',3,'2026-08-05','2026-08-05',1,[{p:67,t:'FS',l:0},{p:68,t:'FS',l:0},{p:69,t:'FS',l:0}],['Intratech']],
+ [73,'Install Filter Cartridges (DC-422)','DustCollectors',3,'2026-08-06','2026-08-06',1,[{p:72,t:'FS',l:0}],['Intratech']],
+ [74,'Dust Collector DC-922','DustCollectors',2,'2026-06-30','2026-08-07',29,[],[]],
+ [75,'I&E Disconnect (DC-922)','DustCollectors',3,'2026-06-30','2026-06-30',1,[],['Delta']],
+ [76,'Demo old DC-959 & DC-901','DustCollectors',3,'2026-07-01','2026-07-07',5,[{p:75,t:'FS',l:0}],['Intratech']],
+ [77,'Str Steel for DCs (DC-922)','DustCollectors',3,'2026-07-08','2026-07-09',2,[{p:76,t:'FS',l:0}],['Padgett']],
+ [78,'Roof Penetration (DC-922)','DustCollectors',3,'2026-07-10','2026-07-10',1,[{p:77,t:'FS',l:0}],['Intratech']],
+ [79,'Str for stack (DC-922)','DustCollectors',3,'2026-07-13','2026-07-13',1,[{p:78,t:'FS',l:0}],['Padgett']],
+ [80,'Rig Dust Collectors (DC-922)','DustCollectors',3,'2026-07-10','2026-07-14',3,[{p:77,t:'FS',l:0}],['Intratech']],
+ [81,'Install DC-922 in place','DustCollectors',3,'2026-07-15','2026-07-21',5,[{p:80,t:'FS',l:0},{p:34,t:'FS',l:0}],['Intratech']],
+ [82,'Install Fan (DC-922)','DustCollectors',3,'2026-07-22','2026-07-23',2,[{p:81,t:'FS',l:0}],['Intratech']],
+ [83,'Install HEPA Filter Housing','DustCollectors',3,'2026-07-24','2026-07-24',1,[{p:82,t:'FS',l:0}],['Intratech']],
+ [84,'Install Preliminary Ducting (DC-922)','DustCollectors',3,'2026-07-27','2026-08-07',10,[{p:81,t:'FS',l:0},{p:82,t:'FS',l:0},{p:83,t:'FS',l:0}],['Intratech']],
+ [85,'Install wiring instrumentation (DC-922)','DustCollectors',3,'2026-07-27','2026-07-29',3,[{p:86,t:'FS',l:0}],['Delta']],
+ [86,'Install Stack (DC-922)','DustCollectors',3,'2026-07-24','2026-07-24',1,[{p:80,t:'FS',l:0},{p:81,t:'FS',l:0},{p:82,t:'FS',l:0}],['Intratech']],
+ [87,'Install Filter Cartridges (DC-922)','DustCollectors',3,'2026-07-27','2026-07-27',1,[{p:86,t:'FS',l:0}],['Intratech']],
+ [88,'Install HEPA Filters','DustCollectors',3,'2026-07-28','2026-07-28',0.5,[{p:87,t:'FS',l:0}],['Intratech']],
+ [89,'Ductwork','Construction',2,'2026-06-30','2026-08-19',37,[],[]],
+ [90,'Install DC-422 Duct to ends','Construction',3,'2026-06-30','2026-06-30',1,[],['Intratech']],
+ [91,'Install Pickup Points DC-422','Construction',3,'2026-07-01','2026-07-01',1,[{p:90,t:'FS',l:0}],['Intratech']],
+ [92,'Install ductwork to DC (422)','Construction',3,'2026-08-19','2026-08-19',1,[{p:70,t:'FS',l:0},{p:90,t:'FS',l:0}],['Intratech']],
+ [93,'Install DC-601 Duct to ends','Construction',3,'2026-06-30','2026-06-30',1,[],['Intratech']],
+ [94,'Install Pickup Points DC-601','Construction',3,'2026-07-01','2026-07-01',1,[{p:93,t:'FS',l:0}],['Intratech']],
+ [95,'Install ductwork to DC (601)','Construction',3,'2026-07-01','2026-07-01',1,[{p:93,t:'FS',l:0}],['Intratech']],
+ [96,'Install DC-922 Duct to ends','Construction',3,'2026-06-30','2026-06-30',1,[],['Intratech']],
+ [97,'Install Pickup Points DC-922','Construction',3,'2026-07-01','2026-07-01',1,[{p:96,t:'FS',l:0}],['Intratech']],
+ [98,'Install ductwork to DC (922)','Construction',3,'2026-08-10','2026-08-10',1,[{p:96,t:'FS',l:0},{p:84,t:'FS',l:0}],['Intratech']],
+ [99,'Install instrumentation (ductwork)','Construction',3,'2026-07-01','2026-07-03',3,[{p:90,t:'FS',l:0},{p:93,t:'FS',l:0},{p:96,t:'FS',l:0}],['Delta']],
+ [100,'Feeder Belts','Construction',2,'2026-06-01','2026-06-15',11,[],[]],
+ [101,'E&I disconnect (feeder belts)','Construction',3,'2026-06-01','2026-06-01',0.25,[],['Delta']],
+ [102,'Demo Feeder Belt/Hopper 1','Construction',3,'2026-06-02','2026-06-02',1,[{p:101,t:'FS',l:0}],['Blue Grass']],
+ [103,'Demo Feeder Belt/Hopper 2','Construction',3,'2026-06-03','2026-06-03',1,[{p:102,t:'FS',l:0}],['Blue Grass']],
+ [104,'Install Feeder Belt/Hopper 1','Construction',3,'2026-06-04','2026-06-09',4,[{p:103,t:'FS',l:0}],['Blue Grass']],
+ [105,'Install Feeder Belt/Hopper 2','Construction',3,'2026-06-10','2026-06-12',3,[{p:104,t:'FS',l:0}],['Blue Grass']],
+ [106,'E&I Connections (feeder belts)','Construction',3,'2026-06-15','2026-06-15',1,[{p:105,t:'FS',l:0}],['Delta']],
+ [107,'Dryer Shrouds/701 box Install','Construction',2,'2026-06-01','2026-06-05',5,[],['Blue Grass']],
+ [108,'Versal Feeder','Construction',2,'2026-06-30','2026-07-10',9,[],[]],
+ [109,'E&I Disconnect (Versal)','Construction',3,'2026-06-30','2026-06-30',1,[],['Delta']],
+ [110,'Remove Old Cage','Construction',3,'2026-07-01','2026-07-01',1,[{p:109,t:'FS',l:0}],['Intratech']],
+ [111,'Remove upper section of unloader','Construction',3,'2026-07-02','2026-07-02',1,[{p:110,t:'FS',l:0}],['Intratech']],
+ [112,'Weld Plates onto Upper section','Construction',3,'2026-07-03','2026-07-03',1,[{p:111,t:'FS',l:0}],['Intratech']],
+ [113,'Remove lower sections of unloader','Construction',3,'2026-07-06','2026-07-06',1,[{p:112,t:'FS',l:0}],['Intratech']],
+ [114,'Place new retrofit sections','Construction',3,'2026-07-07','2026-07-07',1,[{p:113,t:'FS',l:0}],['Intratech']],
+ [115,'Place upper section of unloader','Construction',3,'2026-07-08','2026-07-08',1,[{p:114,t:'FS',l:0}],['Intratech']],
+ [116,'Install new cage','Construction',3,'2026-07-09','2026-07-09',1,[{p:115,t:'FS',l:0}],['Intratech']],
+ [117,'E&I connections (Versal)','Construction',3,'2026-07-10','2026-07-10',1,[{p:116,t:'FS',l:0}],['Delta']],
+ [118,'Electrical','Electrical',2,'2025-06-30','2026-11-12',358.5,[],[],true],
+ [119,'Demo MCC Buckets','Electrical',3,'2026-06-01','2026-06-01',1,[],['Delta']],
+ [120,'Disconnect Instrumentation','Electrical',3,'2026-06-02','2026-06-02',1,[{p:119,t:'FS',l:0}],['Delta']],
+ [121,'Install New MCC Buckets','Electrical',3,'2026-06-02','2026-06-02',1,[{p:119,t:'FS',l:0}],['Delta']],
+ [122,'Energize Buckets','Electrical',3,'2026-06-03','2026-06-03',0.25,[{p:121,t:'FS',l:0}],['Delta']],
+ [123,'Program VFDs','Electrical',3,'2026-08-11','2026-08-11',0.5,[{p:122,t:'FS',l:0},{p:71,t:'FS',l:0},{p:85,t:'FS',l:0}],['Delta']],
+ [124,'Install Instrumentation','Electrical',3,'2026-08-11','2026-08-19',7,[{p:37,t:'FS',l:0},{p:43,t:'FS',l:0},{p:60,t:'FS',l:0},{p:71,t:'FS',l:0},{p:85,t:'FS',l:0},{p:99,t:'FS',l:0},{p:106,t:'FS',l:0},{p:117,t:'FS',l:0}],['Delta']],
+ [125,'Install valve positioner switch wiring','Electrical',3,'2026-08-20','2026-08-20',1,[{p:124,t:'FS',l:0}],['Delta']],
+ [126,'Tie in 480V wires','Electrical',3,'2026-08-20','2026-08-20',1,[{p:106,t:'FS',l:0},{p:37,t:'FS',l:0},{p:124,t:'FS',l:0}],['Delta']],
+ [127,'Tie in 120V wires','Electrical',3,'2026-08-20','2026-08-20',1,[{p:124,t:'FS',l:0}],['Delta']],
+ [128,'Tie in DC control panels','Electrical',3,'2026-08-20','2026-08-20',1,[{p:124,t:'FS',l:0}],['Delta']],
+ [129,'Tie in Versal Supersack instrumentation','Electrical',3,'2026-07-13','2026-07-13',0.5,[{p:117,t:'FS',l:0}],['Delta']],
+ [130,'Motor Orientation Checks','Electrical',3,'2026-08-21','2026-08-21',0.12,[{p:126,t:'FS',l:0},{p:123,t:'FS',l:0}],['Delta']],
+ [131,'Feed Conveyor Checks','Electrical',3,'2026-08-21','2026-08-21',0.12,[{p:126,t:'FS',l:0},{p:106,t:'FS',l:0}],['Delta']],
+ [132,'Calibrate Instrumentation','Electrical',3,'2026-08-21','2026-08-24',2,[{p:124,t:'FS',l:0},{p:125,t:'FS',l:0}],['Delta']],
+ [133,'Loop Checks','Electrical',3,'2026-08-25','2026-08-31',5,[{p:132,t:'FS',l:0}],['Delta']],
+ [134,'Automation','Electrical',3,'2026-09-01','2026-09-09',7,[{p:133,t:'FS',l:0}],[]],
+ [135,'DCS Programming','Electrical',4,'2026-09-01','2026-09-07',5,[{p:124,t:'FS',l:0},{p:132,t:'FS',l:0},{p:131,t:'FS',l:0}],['ESI']],
+ [136,'I/O Checks','Electrical',4,'2026-09-08','2026-09-09',2,[{p:135,t:'FS',l:0}],['ESI']],
+ [137,'PSSR','Electrical',3,'2026-09-10','2026-09-10',1,[{p:134,t:'FS',l:0},{p:136,t:'FS',l:0}],['Clariant','CM']],
+ [138,'Punch list resolution','Electrical',3,'2026-09-11','2026-09-14',1.5,[{p:137,t:'FS',l:0}],['CM','Intratech','Delta']],
+ [139,'RTO','Electrical',3,'2026-09-14','2026-09-14',0,[{p:138,t:'FS',l:0}],[]],
+ [140,'Demobilization','Construction',3,'2026-08-13','2026-08-13',0.25,[],['CM','SM','PM']],
+ [141,'Commissioning','Commissioning',3,'2026-09-14','2026-09-21',5,[],[]],
+ [142,'Air Balancing','Commissioning',4,'2026-09-14','2026-09-21',5,[{p:138,t:'FS',l:0}],['Craig Equipment']],
+ [143,'Insulation, labeling','Construction',3,'2025-06-30','2025-07-11',10,[],[]],
+ [144,'Regulatory/Environmental tests','Testing',3,'2026-09-21','2026-10-09',14,[],[]],
+ [145,'Internal Dust Testing','Testing',4,'2026-09-21','2026-10-09',14,[{p:141,t:'FS',l:0}],['Clariant']],
+ [146,'Dust Track Testing','Testing',4,'2026-09-21','2026-09-23',2,[{p:141,t:'FS',l:0}],['CDG']],
+ [147,'Stack Test','Testing',4,'2026-09-21','2026-09-28',5,[{p:141,t:'FS',l:0}],['ESHA']],
+ [148,'Project Closeout','Closeout',3,'2026-10-09','2026-11-12',24,[{p:144,t:'FS',l:0}],[],true],
+ [149,'Project Documentation','Closeout',4,'2026-10-09','2026-11-09',21,[{p:144,t:'FS',l:0}],['PM','PT']],
+ [150,'Payout invoices','Closeout',4,'2026-10-09','2026-11-12',24,[{p:144,t:'FS',l:0}],['PM']],
+ [151,'Document Review','Closeout',4,'2026-10-09','2026-10-16',5,[{p:144,t:'FS',l:0}],['PM','PT']],
+ [152,'Handover documentation to Plant','Closeout',4,'2026-10-09','2026-10-12',1,[{p:144,t:'FS',l:0}],['PM']],
+ [153,'Financial Project Closeout','Closeout',4,'2026-10-09','2026-10-20',7,[],['PM']],
+];
+
+const CONTACTS = {
+  'Intratech':{name:'Intratech Mechanical',email:'ops@intratech.com',phone:'+1 (555) 301-2200',role:'Mechanical/Piping/Rigging',color:'#3b82f6',init:'IT'},
+  'Delta':{name:'Delta E&I',email:'projects@delta-ei.com',phone:'+1 (555) 480-9910',role:'Electrical & Instrumentation',color:'#8b5cf6',init:'DL'},
+  'Padgett':{name:'Padgett Steel',email:'fab@padgettsteel.com',phone:'+1 (555) 622-7700',role:'Structural Steel',color:'#6366f1',init:'PS'},
+  'Blue Grass':{name:'Blue Grass Mechanical',email:'field@bluegrassmech.com',phone:'+1 (555) 714-5500',role:'Feeder Belts & Dryer',color:'#10b981',init:'BG'},
+  'Safeway':{name:'Safeway Scaffolding',email:'jobs@safeway-scaffolding.com',phone:'+1 (555) 201-3300',role:'Scaffolding',color:'#f59e0b',init:'SW'},
+  'Brown':{name:'Brown Fire Protection',email:'service@brownfire.com',phone:'+1 (555) 919-4400',role:'Sprinkler/Fire Protection',color:'#ef4444',init:'BR'},
+  'CFW':{name:'CFW Engineering',email:'design@cfw-eng.com',phone:'+1 (555) 800-1100',role:'Engineering Design',color:'#0ea5e9',init:'CF'},
+  'ESI':{name:'ESI Automation',email:'controls@esi-auto.com',phone:'+1 (555) 377-8800',role:'DCS & Automation',color:'#d946ef',init:'ES'},
+  'Clariant':{name:'Clariant / Plant Ops',email:'ops.uslv@clariant.com',phone:'+1 (555) 100-0001',role:'Plant Operations',color:'#dc2626',init:'CL'},
+  'Craig Equipment':{name:'Craig Equipment',email:'balance@craigequip.com',phone:'+1 (555) 500-6600',role:'Air Balancing',color:'#059669',init:'CE'},
+  'Risinger':{name:'Risinger Civil',email:'field@risinger.com',phone:'+1 (555) 411-2233',role:'Concrete & Civil',color:'#78716c',init:'RC'},
+  'Operations':{name:'Plant Operations',email:'ops@uslv-clearview.com',phone:'+1 (555) 100-0002',role:'Permits & LOTO',color:'#0f766e',init:'OP'},
+  'PM':{name:'Project Manager',email:'m.khan@clariant.com',phone:'+1 (555) 214-7890',role:'Project Management',color:'#c8a84b',init:'PM'},
+  'CM':{name:'Construction Manager',email:'cm@clariant.com',phone:'+1 (555) 214-7891',role:'Construction Mgmt',color:'#1a1a2e',init:'CM'},
+  'CDG':{name:'CDG Environmental',email:'testing@cdg-env.com',phone:'+1 (555) 733-9900',role:'Dust Track Testing',color:'#7c3aed',init:'CD'},
+  'ESHA':{name:'ESHA Stack Testing',email:'stack@esha-test.com',phone:'+1 (555) 844-5500',role:'Stack Testing',color:'#b45309',init:'EH'},
+  'SM':{name:'Safety Manager',email:'safety@clariant.com',phone:'+1 (555) 214-7893',role:'Safety Management',color:'#dc2626',init:'SM'},
+  'Safety':{name:'Safety Team',email:'safety@clariant.com',phone:'+1 (555) 214-7893',role:'Safety Orientation',color:'#dc2626',init:'SF'},
+  'PT':{name:'Project Team',email:'team@clariant.com',phone:'+1 (555) 214-7892',role:'Project Team',color:'#4a5568',init:'PT'},
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════
+let taskMap = {};
+let changelog = [];
+let TODAY = new Date();
+let shiftOffset = 0;
+let AF = {sec:'all',res:'all',changed:false,upcoming:false};
+let GF = 'all';
+let selRemDays = 15;
+let selTaskId = null;
+let spRequestDigest = null;
+let currentUser = '';
+let unsavedIds = new Set();
+
+// Build taskMap from baseline
+function buildTaskMap() {
+  taskMap = {};
+  BASELINE.forEach(r => {
+    taskMap[r[0]] = {
+      id:r[0], nm:r[1], sec:r[2], lvl:r[3],
+      s:r[4], e:r[5], dur:r[6],
+      preds:r[7], res:r[8],
+      origS:r[4], origE:r[5],
+      isHdr:!!r[9], shifted:false, pct:0, note:'',
+      spId:null // SharePoint list item ID once created
+    };
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// TOAST NOTIFICATIONS
+// ═══════════════════════════════════════════════════════════════════
+function toast(msg, type='info', duration=3000) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast ${type} show`;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), duration);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SHAREPOINT AUTH & REQUEST DIGEST
+// ═══════════════════════════════════════════════════════════════════
+async function getRequestDigest() {
+  try {
+    const r = await fetch(`${SP_SITE}/_api/contextinfo`, {
+      method: 'POST',
+      headers: {'Accept':'application/json;odata=verbose','Content-Type':'application/json;odata=verbose'}
+    });
+    const data = await r.json();
+    spRequestDigest = data.d.GetContextWebInformation.FormDigestValue;
+    return spRequestDigest;
+  } catch(e) {
+    console.error('Digest error', e);
+    return null;
+  }
+}
+
+async function getCurrentUser() {
+  try {
+    const r = await fetch(`${SP_SITE}/_api/web/currentuser`, {
+      headers: {'Accept':'application/json;odata=verbose'}
+    });
+    const data = await r.json();
+    currentUser = data.d.Title || data.d.LoginName || 'Unknown';
+    document.getElementById('sync-user').textContent = currentUser;
+    document.getElementById('sp-status-top').textContent = `Signed in: ${currentUser}`;
+  } catch(e) {
+    currentUser = 'PM';
+    document.getElementById('sync-user').textContent = 'PM';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SHAREPOINT READ — load all rows from EPT_Schedule list
+// ═══════════════════════════════════════════════════════════════════
+async function syncFromSP() {
+  setSyncState('syncing', 'Loading from SharePoint...');
+  try {
+    const url = `${SP_API}?$select=TaskID,TaskName,CurrentStart,CurrentFinish,OriginalStart,OriginalFinish,Status,PctComplete,Notes,ShiftOffset,LastUpdatedBy,Id&$top=500`;
+    const r = await fetch(url, {
+      headers: {'Accept':'application/json;odata=verbose'}
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    const items = data.d.results;
+
+    if (items.length === 0) {
+      // First time — list is empty, push baseline to SharePoint
+      setSyncState('syncing', 'First run — initialising SharePoint list with baseline data...');
+      await initialiseListFromBaseline();
+      return;
+    }
+
+    // Apply SP data over task map
+    let shiftVal = 0;
+    items.forEach(item => {
+      const tid = item.TaskID;
+      const t = taskMap[tid];
+      if (!t) return;
+      if (item.CurrentStart) t.s = item.CurrentStart.slice(0,10);
+      if (item.CurrentFinish) t.e = item.CurrentFinish.slice(0,10);
+      if (item.OriginalStart) t.origS = item.OriginalStart.slice(0,10);
+      if (item.OriginalFinish) t.origE = item.OriginalFinish.slice(0,10);
+      if (item.Status) t.pct = item.Status === 'Complete' ? 100 : item.Status === 'In Progress' ? 50 : 0;
+      if (item.Notes) t.note = item.Notes;
+      if (item.ShiftOffset) shiftVal = item.ShiftOffset;
+      t.spId = item.Id;
+      t.shifted = (t.s !== t.origS);
+    });
+
+    if (shiftVal !== 0) {
+      shiftOffset = shiftVal;
+      document.getElementById('shifted-pill').style.display = 'inline-flex';
+      document.getElementById('shifted-pill').textContent = `Shifted ${shiftVal > 0 ? '+' : ''}${shiftVal}d`;
+      document.getElementById('shift-info').textContent = `Schedule shifted ${shiftVal > 0 ? '+' : ''}${shiftVal} days (from SharePoint)`;
+      document.getElementById('shift-info').style.display = 'block';
+    }
+
+    unsavedIds.clear();
+    updateUnsavedBadge();
+    setSyncState('ok', `Loaded ${items.length} tasks from SharePoint · Last sync: ${new Date().toLocaleTimeString()}`);
+    renderAll();
+    toast(`Schedule loaded from SharePoint (${items.length} tasks)`, 'success');
+  } catch(e) {
+    setSyncState('error', `SharePoint error: ${e.message}. Check you are signed into SharePoint.`);
+    toast('Could not reach SharePoint. Using baseline data.', 'error', 5000);
+    // Fall back to baseline display
+    renderAll();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SHAREPOINT INITIALISE — first run, write all 153 tasks to list
+// ═══════════════════════════════════════════════════════════════════
+async function initialiseListFromBaseline() {
+  const digest = await getRequestDigest();
+  if (!digest) { toast('Could not get SharePoint permissions', 'error'); return; }
+
+  let count = 0;
+  const tasks = Object.values(taskMap).filter(t => t.id > 0);
+
+  for (const t of tasks) {
+    const body = JSON.stringify({
+      '__metadata': {'type': `SP.Data.EPT_ScheduleListItem`},
+      'Title': t.nm.slice(0, 255),
+      'TaskID': t.id,
+      'TaskName': t.nm.slice(0, 255),
+      'CurrentStart': t.s + 'T00:00:00Z',
+      'CurrentFinish': t.e + 'T00:00:00Z',
+      'OriginalStart': t.origS + 'T00:00:00Z',
+      'OriginalFinish': t.origE + 'T00:00:00Z',
+      'Status': 'Not Started',
+      'PctComplete': 0,
+      'Notes': '',
+      'ShiftOffset': 0,
+      'LastUpdatedBy': currentUser,
+      'Section': t.sec,
+      'Duration': t.dur,
+      'Resources': t.res.join(', ')
+    });
+    try {
+      const r = await fetch(SP_API, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json;odata=verbose',
+          'Content-Type': 'application/json;odata=verbose',
+          'X-RequestDigest': digest
+        },
+        body
+      });
+      if (r.ok) {
+        const d = await r.json();
+        t.spId = d.d.Id;
+        count++;
+      }
+    } catch(e) { console.error('Init error task', t.id, e); }
+    if (count % 20 === 0) setSyncState('syncing', `Initialising... ${count}/${tasks.length} tasks written`);
+  }
+
+  setSyncState('ok', `Initialised — ${count} tasks written to SharePoint`);
+  toast(`SharePoint list initialised with ${count} tasks`, 'success', 5000);
+  renderAll();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SHAREPOINT WRITE — update a single task row
+// ═══════════════════════════════════════════════════════════════════
+async function saveTaskToSP(tid) {
+  const t = taskMap[tid];
+  if (!t || !t.spId) {
+    unsavedIds.add(tid);
+    updateUnsavedBadge();
+    return;
+  }
+  const digest = spRequestDigest || await getRequestDigest();
+  if (!digest) { unsavedIds.add(tid); updateUnsavedBadge(); return; }
+
+  const statusStr = t.pct === 100 ? 'Complete' : t.pct === 50 ? 'In Progress' : 'Not Started';
+  const body = JSON.stringify({
+    '__metadata': {'type': `SP.Data.EPT_ScheduleListItem`},
+    'CurrentStart': t.s + 'T00:00:00Z',
+    'CurrentFinish': t.e + 'T00:00:00Z',
+    'OriginalStart': t.origS + 'T00:00:00Z',
+    'OriginalFinish': t.origE + 'T00:00:00Z',
+    'Status': statusStr,
+    'PctComplete': t.pct,
+    'Notes': t.note || '',
+    'ShiftOffset': shiftOffset,
+    'LastUpdatedBy': currentUser
+  });
+
+  try {
+    const r = await fetch(`${SP_API}(${t.spId})`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json;odata=verbose',
+        'Content-Type': 'application/json;odata=verbose',
+        'X-RequestDigest': digest,
+        'X-HTTP-Method': 'MERGE',
+        'IF-MATCH': '*'
+      },
+      body
+    });
+    if (r.ok || r.status === 204) {
+      unsavedIds.delete(tid);
+      updateUnsavedBadge();
+      return true;
+    } else {
+      unsavedIds.add(tid);
+      updateUnsavedBadge();
+    }
+  } catch(e) {
+    unsavedIds.add(tid);
+    updateUnsavedBadge();
+  }
+  return false;
+}
+
+// Push all unsaved or shifted tasks at once
+async function pushAllToSP() {
+  const toSave = unsavedIds.size > 0
+    ? [...unsavedIds].map(id => taskMap[id]).filter(Boolean)
+    : Object.values(taskMap).filter(t => t.shifted && t.id > 0);
+
+  if (!toSave.length) { toast('Nothing to push — all tasks are up to date', 'info'); return; }
+
+  setSyncState('syncing', `Pushing ${toSave.length} tasks to SharePoint...`);
+  await getRequestDigest();
+  let saved = 0;
+  for (const t of toSave) {
+    const ok = await saveTaskToSP(t.id);
+    if (ok) saved++;
+  }
+  setSyncState('ok', `Pushed ${saved}/${toSave.length} tasks · ${new Date().toLocaleTimeString()}`);
+  toast(`${saved} tasks saved to SharePoint`, 'success');
+}
+
+function setSyncState(state, msg) {
+  const dot = document.getElementById('sync-dot');
+  const msgEl = document.getElementById('sync-msg');
+  dot.className = 'sync-dot' + (state === 'syncing' ? ' syncing' : state === 'error' ? ' error' : '');
+  msgEl.textContent = msg;
+}
+
+function updateUnsavedBadge() {
+  const el = document.getElementById('unsaved-count');
+  if (unsavedIds.size > 0) {
+    el.style.display = 'inline';
+    el.textContent = `${unsavedIds.size} unsaved`;
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// DATE UTILS + CASCADE ENGINE
+// ═══════════════════════════════════════════════════════════════════
+function addDays(dateStr, d) {
+  const dt = new Date(dateStr); dt.setDate(dt.getDate() + Math.round(d));
+  return dt.toISOString().slice(0,10);
+}
+function diffDays(a, b) { return Math.round((new Date(a) - new Date(b)) / 864e5); }
+function daysAway(ds) { return Math.round((new Date(ds) - TODAY) / 864e5); }
+
+function cascade(pinned) {
+  const computed = {...pinned};
+  const visited = new Set(); const order = [];
+  function visit(id) {
+    if (visited.has(id)) return; visited.add(id);
+    const t = taskMap[id]; if (!t) return;
+    t.preds.forEach(p => visit(p.p));
+    order.push(id);
+  }
+  Object.keys(taskMap).forEach(id => visit(parseInt(id)));
+  order.forEach(id => {
+    const t = taskMap[id]; if (!t) return;
+    if (computed[id] !== undefined) return;
+    if (!t.preds.length) { computed[id] = t.origS; return; }
+    let latest = null;
+    t.preds.forEach(pred => {
+      const pt = taskMap[pred.p]; if (!pt) return;
+      const pS = computed[pred.p] !== undefined ? computed[pred.p] : pt.origS;
+      const pF = addDays(pS, pt.dur || 0);
+      let cS;
+      if (pred.t==='FS') cS = addDays(pF, pred.l);
+      else if (pred.t==='SS') cS = addDays(pS, pred.l);
+      else if (pred.t==='FF') cS = addDays(addDays(pF, pred.l), -(t.dur||0));
+      else cS = addDays(pF, pred.l);
+      if (!latest || cS > latest) latest = cS;
+    });
+    computed[id] = latest || t.origS;
+  });
+  order.forEach(id => {
+    const t = taskMap[id]; if (!t) return;
+    const newS = computed[id] || t.origS;
+    t.s = newS; t.e = addDays(newS, t.dur || 0);
+    t.shifted = (t.s !== t.origS);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SCHEDULE SHIFT
+// ═══════════════════════════════════════════════════════════════════
+function toggleShiftInput() {
+  const mode = document.getElementById('shift-mode').value;
+  document.getElementById('shift-date').style.display = mode === 'offset' ? 'none' : 'inline';
+  document.getElementById('shift-days').style.display = mode === 'offset' ? 'inline' : 'none';
+}
+
+async function applyShift() {
+  const mode = document.getElementById('shift-mode').value;
+  const dateVal = document.getElementById('shift-date').value;
+  const daysVal = parseInt(document.getElementById('shift-days').value) || 0;
+  let offset = 0;
+  if (mode === 'offset') {
+    offset = daysVal;
+  } else {
+    if (!dateVal) { alert('Select a new project start date'); return; }
+    const earliest = Object.values(taskMap).filter(t=>t.id>0&&t.origS>'2020-01-01').map(t=>t.origS).sort()[0];
+    offset = diffDays(dateVal, earliest);
+  }
+  shiftOffset = offset;
+  Object.values(taskMap).forEach(t => { t.s=t.origS; t.e=t.origE; t.shifted=false; });
+  if (offset === 0) { resetShift(); return; }
+  const pinned = {};
+  Object.values(taskMap).filter(t => !t.preds.length && t.id > 0).forEach(t => { pinned[t.id] = addDays(t.origS, offset); });
+  cascade(pinned);
+  const dir = offset > 0 ? `+${offset}` : `${offset}`;
+  const shiftedCount = Object.values(taskMap).filter(x=>x.shifted).length;
+  document.getElementById('shift-info').textContent = `Shifted ${dir} days · ${shiftedCount} tasks cascaded`;
+  document.getElementById('shift-info').style.display = 'block';
+  document.getElementById('shifted-pill').style.display = 'inline-flex';
+  document.getElementById('shifted-pill').textContent = `Shifted ${dir}d`;
+  logChange('SHIFT', `Schedule shifted ${dir} days`, `${shiftedCount} tasks auto-cascaded`);
+  renderAll();
+  // Push all shifted tasks to SharePoint
+  setSyncState('syncing', `Saving ${shiftedCount} shifted tasks to SharePoint...`);
+  await getRequestDigest();
+  let saved = 0;
+  for (const t of Object.values(taskMap).filter(x=>x.shifted && x.id>0)) {
+    const ok = await saveTaskToSP(t.id);
+    if (ok) saved++;
+  }
+  setSyncState('ok', `Shift saved — ${saved} tasks updated in SharePoint · ${new Date().toLocaleTimeString()}`);
+  toast(`Schedule shift saved to SharePoint (${saved} tasks)`, 'success');
+}
+
+async function resetShift() {
+  Object.values(taskMap).forEach(t => { t.s=t.origS; t.e=t.origE; t.shifted=false; });
+  shiftOffset = 0;
+  document.getElementById('shift-info').style.display = 'none';
+  document.getElementById('shifted-pill').style.display = 'none';
+  logChange('SHIFT', 'Schedule reset to original baseline dates', '');
+  renderAll();
+  await pushAllToSP();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// RENDER FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════
+function setToday(v) { TODAY = new Date(v); updateCounts(); renderSchedule(); renderUpcoming(); }
+
+function updateCounts() {
+  const all = Object.values(taskMap).filter(t => t.res.length > 0 && !t.isHdr && t.id > 0);
+  document.getElementById('c3').textContent = all.filter(t=>{const d=daysAway(t.s);return d>=0&&d<=3}).length;
+  document.getElementById('c7').textContent = all.filter(t=>{const d=daysAway(t.s);return d>3&&d<=7}).length;
+  document.getElementById('c15').textContent = all.filter(t=>{const d=daysAway(t.s);return d>7&&d<=15}).length;
+}
+
+function renderSchedule() {
+  const tasks = Object.values(taskMap).filter(t => {
+    if (t.id === 0) return false;
+    if (AF.sec !== 'all' && t.sec !== AF.sec) return false;
+    if (AF.res !== 'all' && !t.res.includes(AF.res)) return false;
+    if (AF.changed && !t.shifted) return false;
+    if (AF.upcoming) { const d=daysAway(t.s); if (d<0||d>30) return false; }
+    return true;
+  });
+  let h = '';
+  tasks.forEach(t => {
+    const days = daysAway(t.s);
+    const rc = (t.isHdr?'sec ':'')+(t.shifted?'shifted ':'')+(days<0?'done-row':'');
+    const origCell = t.shifted
+      ? `<span style="color:#94a3b8;text-decoration:line-through;font-size:10px">${t.origS}</span>`
+      : `<span style="font-size:11px;color:#4a5568">${t.s}</span>`;
+    const currCell = t.shifted
+      ? `<span style="color:#d97706;font-weight:700;font-size:11px">${t.s}</span>`
+      : `<span style="font-size:11px;color:#4a5568">${t.s}</span>`;
+    const rb = t.res.map(r=>`<span class="res-b">${r}</span>`).join('');
+    const pb = t.preds.map(p=>`<span class="pred-b">${p.p}${p.t!=='FS'?'/'+p.t:''}${p.l?'/'+p.l:''}</span>`).join('');
+    let dBadge = '';
+    if (days<0) dBadge=`<span style="background:#f1f5f9;color:#94a3b8;padding:1px 5px;border-radius:5px;font-size:10px">done</span>`;
+    else if (days===0) dBadge=`<span style="background:#f8d7da;color:#721c24;padding:1px 5px;border-radius:5px;font-size:10px;font-weight:700">TODAY</span>`;
+    else if (days<=3) dBadge=`<span style="background:#f8d7da;color:#721c24;padding:1px 5px;border-radius:5px;font-size:10px;font-weight:700">${days}d</span>`;
+    else if (days<=7) dBadge=`<span style="background:#fff3cd;color:#856404;padding:1px 5px;border-radius:5px;font-size:10px;font-weight:700">${days}d</span>`;
+    else if (days<=15) dBadge=`<span style="background:#d4edda;color:#155724;padding:1px 5px;border-radius:5px;font-size:10px;font-weight:700">${days}d</span>`;
+    else dBadge=`<span style="color:#94a3b8;font-size:10px">${days}d</span>`;
+    const pctBg={0:'#f1f5f9,#64748b',50:'#dbeafe,#1e40af',100:'#d4edda,#155724'}[t.pct]||'#f1f5f9,#64748b';
+    const [pbg,pfc]=pctBg.split(',');
+    const staBadge=`<span style="background:${pbg};color:${pfc};padding:1px 6px;border-radius:5px;font-size:10px;font-weight:700">${t.pct===100?'Done':t.pct===50?'In Prog':'Not Strt'}</span>`;
+    const unsavedMark = unsavedIds.has(t.id) ? `<span class="unsaved-dot" title="Unsaved change"></span>` : '';
+    h += `<tr class="${rc.trim()}" onclick="openD(${t.id})">
+      <td style="color:#94a3b8;font-size:10px;font-weight:700">${t.id}${unsavedMark}</td>
+      <td style="padding-left:${(t.lvl-1)*12+8}px">${t.nm}</td>
+      <td>${origCell}</td><td>${currCell}</td>
+      <td style="font-size:11px;color:#4a5568;white-space:nowrap">${t.e}</td>
+      <td style="font-size:11px;color:#94a3b8;white-space:nowrap">${t.dur}d</td>
+      <td>${pb}</td><td>${rb}</td><td>${dBadge}</td><td>${staBadge}</td>
+    </tr>`;
+  });
+  document.getElementById('stbody').innerHTML = h;
+}
+
+function filt(type, val, el) {
+  document.querySelectorAll('#v-schedule .chip').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  AF = {sec:'all',res:'all',changed:false,upcoming:false};
+  if (type==='sec') AF.sec=val;
+  else if (type==='res') AF.res=val;
+  else if (type==='changed') AF.changed=true;
+  else if (type==='upcoming') AF.upcoming=true;
+  renderSchedule();
+}
+
+// GANTT
+const MONTHS=[
+  {l:'Feb 26',y:2026,m:1},{l:'Mar 26',y:2026,m:2},{l:'Apr 26',y:2026,m:3},
+  {l:'May 26',y:2026,m:4},{l:'Jun 26',y:2026,m:5},{l:'Jul 26',y:2026,m:6},
+  {l:'Aug 26',y:2026,m:7},{l:'Sep 26',y:2026,m:8},{l:'Oct 26',y:2026,m:9},
+  {l:'Nov 26',y:2026,m:10},{l:'Dec 26',y:2026,m:11},
+];
+const GS=new Date(2026,1,1),GE=new Date(2026,11,15),GTOT=(GE-GS)/864e5;
+const SEC_COL={PreConstruction:'o',Construction:'b',DustCollectors:'r',Electrical:'p',Commissioning:'g',Closeout:'g',Engineering:'b',Procurement:'b',Testing:'r'};
+function dX(d){if(!d)return null;const dt=new Date(d);return Math.max(0,Math.min(100,((dt-GS)/864e5)/GTOT*100));}
+
+function renderGantt() {
+  const tasks=Object.values(taskMap).filter(t=>t.id>0&&(GF==='all'||t.sec===GF)).slice(0,90);
+  const todayX=dX(TODAY.toISOString().slice(0,10));
+  let html=`<div class="ghdr"><div class="ghl">Activity</div><div class="ghm">${MONTHS.map(m=>`<div class="gm">${m.l}</div>`).join('')}</div></div><div class="gbdy">`;
+  tasks.forEach(t=>{
+    const lc='glbl'+(t.lvl===2?' i1':t.lvl===3?' i2':t.lvl>=4?' i3':'')+(t.isHdr?' sh':'');
+    const rc='grow'+(t.isHdr?' gs':'')+(t.shifted?' shifted-row':'');
+    const nm=t.nm.length>30?t.nm.slice(0,30)+'…':t.nm;
+    let bar='';
+    const x1=dX(t.s),x2=dX(t.e);
+    if(x1!==null&&x1<100){
+      const w=Math.max((x2||x1)-x1,0.4);
+      const bc=SEC_COL[t.sec]||'b';
+      const lbl=w>5?t.nm.slice(0,14)+(t.nm.length>14?'…':''):'';
+      let ghost='';
+      if(t.shifted){
+        const ox1=dX(t.origS),ox2=dX(t.origE),ow=Math.max((ox2||ox1)-ox1,0.4);
+        if(ox1<100) ghost=`<div style="position:absolute;left:${ox1.toFixed(1)}%;width:${ow.toFixed(1)}%;height:14px;border-radius:3px;background:rgba(0,0,0,.04);border:1px dashed #94a3b8;z-index:1" title="Original: ${t.origS}"></div>`;
+      }
+      bar=ghost+`<div class="gbar ${bc}${t.shifted?' shifted':''}" style="left:${x1.toFixed(1)}%;width:${w.toFixed(1)}%" title="${t.nm} | ${t.s}–${t.e}" onclick="openD(${t.id});event.stopPropagation()">${lbl}</div>`;
+    }
+    html+=`<div class="${rc}"><div class="${lc}" title="${t.nm}">${nm}</div><div class="gba"><div class="gtdy" style="left:${todayX.toFixed(1)}%"></div>${bar}</div></div>`;
+  });
+  html+=`</div><div class="gleg">
+    <span class="gli"><span class="glsq" style="background:#dbeafe;border:1px solid #3b82f6"></span>Construction</span>
+    <span class="gli"><span class="glsq" style="background:#fff3cd;border:1px solid #f59e0b"></span>Pre-Construction</span>
+    <span class="gli"><span class="glsq" style="background:#f8d7da;border:1px solid #dc3545"></span>Dust Collectors</span>
+    <span class="gli"><span class="glsq" style="background:#e8d5ff;border:1px solid #7c3aed"></span>Electrical</span>
+    <span class="gli"><span class="glsq" style="background:#d4edda;border:1px solid #28a745"></span>Commissioning/Closeout</span>
+    <span class="gli"><span class="glsq" style="background:rgba(0,0,0,.04);border:1px dashed #94a3b8"></span>Original (ghost)</span>
+    <span class="gli"><span style="display:inline-block;width:2px;height:10px;background:#f0c040;margin-right:3px;vertical-align:middle"></span>Today</span>
+  </div>`;
+  document.getElementById('gantt-c').innerHTML=html;
+}
+function filtG(v,el){document.querySelectorAll('#v-gantt .chip').forEach(b=>b.classList.remove('active'));el.classList.add('active');GF=v;renderGantt();}
+
+// REMINDERS
+function renderUpcoming(){
+  const days=selRemDays;
+  const upcoming=Object.values(taskMap).filter(t=>{
+    if(!t.res.length||t.isHdr||t.id===0)return false;
+    const d=daysAway(t.s);return d>=0&&d<=days;
+  }).sort((a,b)=>new Date(a.s)-new Date(b.s));
+  document.getElementById('uc-cnt').textContent=upcoming.length;
+  if(!upcoming.length){document.getElementById('ulist').innerHTML=`<div style="text-align:center;color:#94a3b8;font-size:11px;padding:12px">No activities in next ${days} days</div>`;return;}
+  document.getElementById('ulist').innerHTML=upcoming.map(t=>{
+    const d=daysAway(t.s);const dc=d<=3?'d3':d<=7?'d7':'d15';
+    const rb=t.res.map(r=>`<span class="res-b">${r}</span>`).join('');
+    const mv=t.shifted?` <span style="color:#d97706;font-size:10px;font-weight:700">(moved ${diffDays(t.s,t.origS)>0?'+':''}${diffDays(t.s,t.origS)}d)</span>`:'';
+    return`<div class="uci${selTaskId===t.id?' sel':''}" onclick="selTask(${t.id})">
+      <span class="ud ${dc}">${d}d</span>
+      <div class="ut">${t.nm}${mv}</div>
+      <div class="um">${t.s} → ${t.e} &nbsp;${rb}</div>
+    </div>`;
+  }).join('');
+}
+function selRem(d,el){selRemDays=d;document.querySelectorAll('.rbtn button').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');renderUpcoming();}
+function selTask(id){selTaskId=id;renderUpcoming();renderEmailPreview(id);}
+
+function renderEmailPreview(id){
+  const t=taskMap[id];if(!t)return;
+  const pmName=document.getElementById('pm-name').value;
+  const pmEmail=document.getElementById('pm-email').value;
+  const pmPhone=document.getElementById('pm-phone').value;
+  const projName=document.getElementById('proj-name').value;
+  const days=daysAway(t.s);
+  const isUrgent=days<=3,isMoved=t.shifted;
+  const same=Object.values(taskMap).filter(x=>x.id!==id&&!x.isHdr&&x.res.some(r=>t.res.includes(r))&&Math.abs(daysAway(x.s)-days)<=2&&daysAway(x.s)>=0).slice(0,3);
+  const next=Object.values(taskMap).filter(x=>x.id!==id&&!x.isHdr&&x.res.some(r=>t.res.includes(r))&&daysAway(x.s)>days&&daysAway(x.s)<=days+14).slice(0,3);
+  const succs=Object.values(taskMap).filter(x=>x.preds.some(p=>p.p===id)).slice(0,3);
+  const toEmails=t.res.map(r=>CONTACTS[r]?.email||r+'@company.com').join(', ');
+  document.getElementById('prev-lbl').textContent=`To: ${toEmails}`;
+  const html=`<div class="em-mock">
+    <div class="em-hdr"><div class="em-logo">EPT</div><div><div class="em-ttl">${projName}</div><div class="em-stl">Automated Activity Reminder — ${selRemDays}-Day Notice</div></div></div>
+    ${isUrgent?`<div class="em-alert">URGENT: Activity starts in ${days} day${days===1?'':'s'}. Confirm mobilization NOW.</div>`:''}
+    ${isMoved?`<div class="em-alert">RESCHEDULED: Original start was <b>${t.origS}</b>. New start: <b>${t.s}</b> (${diffDays(t.s,t.origS)>0?'+':''}${diffDays(t.s,t.origS)} days). Update your crew plan.</div>`:''}
+    <div class="em-meta"><b>To:</b> ${t.res.join(', ')} &nbsp; <b>From:</b> ${pmName} (${pmEmail})</div>
+    <div class="em-sec">
+      <div class="em-sec-ttl">Your scheduled activity</div>
+      <div class="em-task ${isUrgent?'urgent':isMoved?'moved':''}">
+        <div class="em-tn">#${t.id} — ${t.nm}</div>
+        <div class="em-tr"><span><b>Start:</b> ${t.s}</span><span><b>Finish:</b> ${t.e}</span><span><b>Duration:</b> ${t.dur}d</span><span><b>Section:</b> ${t.sec}</span></div>
+        ${t.note?`<div style="margin-top:5px;font-size:11px;color:#374151;background:#f8faff;padding:5px 8px;border-radius:5px">Note: ${t.note}</div>`:''}
+        ${t.preds.length?`<div style="margin-top:4px;font-size:10px;color:#64748b">Depends on: ${t.preds.map(p=>`#${p.p} ${taskMap[p.p]?.nm||''}`).join(', ')}</div>`:''}
+      </div>
+    </div>
+    ${succs.length?`<div class="em-sec"><div class="em-sec-ttl">Tasks blocked until YOU complete this</div>${succs.map(x=>`<div class="em-task"><div class="em-tn">#${x.id} — ${x.nm}</div><div class="em-tr"><span><b>Starts:</b> ${x.s}</span><span><b>Res:</b> ${x.res.join(', ')}</span></div></div>`).join('')}</div>`:''}
+    ${same.length?`<div class="em-sec"><div class="em-sec-ttl">Concurrent activities — coordinate</div>${same.map(x=>`<div class="em-task"><div class="em-tn">#${x.id} — ${x.nm}</div><div class="em-tr"><span><b>Start:</b> ${x.s}</span><span><b>Res:</b> ${x.res.join(', ')}</span></div></div>`).join('')}</div>`:''}
+    ${next.length?`<div class="em-sec"><div class="em-sec-ttl">Your upcoming activities</div>${next.map(x=>`<div class="em-task"><div class="em-tn">#${x.id} — ${x.nm}</div><div class="em-tr"><span><b>Start:</b> ${x.s}</span><span><b>Duration:</b> ${x.dur}d</span></div></div>`).join('')}</div>`:''}
+    <div class="em-cont"><b>PM: ${pmName}</b> &nbsp;·&nbsp; ${pmPhone} &nbsp;·&nbsp; ${pmEmail}<br><span style="font-size:10px">Contact PM immediately for conflicts, resource issues, or safety concerns.</span></div>
+    <div class="em-foot">EPT — Cr/Al Execution Tool | USLV Clearview | MK / SG / HG<br>Automated scheduler — reminder generated automatically from SharePoint data.</div>
+  </div>`;
+  document.getElementById('email-preview').innerHTML=html;
+}
+
+function sendEmail(){
+  if(!selTaskId){alert('Select an activity first');return;}
+  const t=taskMap[selTaskId];
+  const btn=document.querySelector('.send-btn');btn.textContent='Sending...';
+  setTimeout(()=>{
+    btn.textContent='Send Reminder Email';
+    document.getElementById('send-ok').style.display='block';
+    setTimeout(()=>document.getElementById('send-ok').style.display='none',3000);
+    logChange('EMAIL',`${selRemDays}-day reminder for Task #${selTaskId}: ${t.nm}`,`To: ${t.res.join(', ')}`);
+  },800);
+}
+
+// CONTACTS
+function renderContacts(){
+  document.getElementById('cgrid').innerHTML=Object.entries(CONTACTS).map(([k,c])=>{
+    const myT=Object.values(taskMap).filter(t=>t.res.includes(k)&&!t.isHdr).slice(0,4);
+    return`<div class="cc">
+      <div class="cc-hd"><div class="cc-av" style="background:${c.color}20;color:${c.color}">${c.init}</div>
+        <div><div class="cc-nm">${c.name}</div><div class="cc-rl">${c.role}</div></div>
+      </div>
+      <div class="cc-f"><label>Email</label><input value="${c.email}" onchange="CONTACTS['${k}'].email=this.value"></div>
+      <div class="cc-f"><label>Phone</label><input value="${c.phone}" onchange="CONTACTS['${k}'].phone=this.value"></div>
+      <div style="margin-top:6px;padding-top:6px;border-top:1px solid #f1f5f9">
+        <div style="font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">
+          Tasks: ${Object.values(taskMap).filter(t=>t.res.includes(k)&&!t.isHdr).length}
+        </div>
+        ${myT.map(t=>`<span class="res-b" style="cursor:pointer" onclick="openD(${t.id})" title="${t.s}→${t.e}">#${t.id} ${t.nm.slice(0,18)}…</span>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// CHANGELOG
+function logChange(type, desc, detail) {
+  changelog.unshift({ts:new Date().toISOString(),type,desc,detail,user:currentUser||'PM'});
+  if(changelog.length>200) changelog.pop();
+  renderChangelog();
+}
+function renderChangelog(){
+  const body=document.getElementById('changelog-body');if(!body)return;
+  if(!changelog.length){body.innerHTML='<div style="color:#94a3b8;font-size:12px;text-align:center;padding:24px">No changes recorded yet.</div>';return;}
+  const cols={SHIFT:'#f59e0b',TASK:'#3b82f6',STATUS:'#28a745',EMAIL:'#7c3aed',SYSTEM:'#dc3545'};
+  body.innerHTML=changelog.map(c=>{
+    const col=cols[c.type]||'#94a3b8';
+    return`<div class="cl-item" style="border-left-color:${col}">
+      <div class="cl-time">${new Date(c.ts).toLocaleString()} &nbsp;·&nbsp; <span style="color:${col};font-weight:700">${c.type}</span> &nbsp;·&nbsp; ${c.user}</div>
+      <div class="cl-desc">${c.desc}</div>
+      ${c.detail?`<div class="cl-detail">${c.detail}</div>`:''}
+    </div>`;
+  }).join('');
+}
+function clearChangelog(){if(confirm('Clear log?')){changelog=[];renderChangelog();}}
+
+// DETAIL PANEL
+async function openD(id){
+  const t=taskMap[id];if(!t)return;
+  const days=daysAway(t.s);
+  const urgCls=days<=3&&days>=0?'r':days<=7&&days>=0?'o':days<=15&&days>=0?'g':'b';
+  const urgLbl=days<0?'Completed':days===0?'Starts TODAY':days<=3?`URGENT — ${days}d`:days<=7?`Soon — ${days}d`:`${days}d away`;
+  const preds=t.preds.map(p=>{const pt=taskMap[p.p];return`<div style="font-size:11px;margin-bottom:3px;padding:4px 8px;background:#f8faff;border-radius:5px"><b>#${p.p}</b> ${pt?.nm||'?'} (${p.t}, lag ${p.l}d) — finishes ${pt?.e||'?'}</div>`;}).join('');
+  const succs=Object.values(taskMap).filter(x=>x.preds.some(p=>p.p===id)).map(x=>`<div style="font-size:11px;margin-bottom:3px;padding:4px 8px;background:#fffbf0;border-radius:5px"><b>#${x.id}</b> ${x.nm} — starts ${x.s}</div>`).join('');
+  const ctInfo=t.res.map(r=>{const c=CONTACTS[r];return c?`<div style="font-size:11px;margin-bottom:4px;padding:6px 8px;background:#f0f4ff;border-radius:5px"><b>${c.name}</b><br>${c.email} &nbsp;·&nbsp; ${c.phone}</div>`:''}).join('');
+  const spBadge=t.spId?`<span style="background:#d4edda;color:#155724;padding:1px 6px;border-radius:5px;font-size:10px;font-weight:700">SP #${t.spId}</span>`:`<span style="background:#f8d7da;color:#721c24;padding:1px 6px;border-radius:5px;font-size:10px">Not in SP yet</span>`;
+  document.getElementById('dpanel').innerHTML=`
+    <div class="dh">
+      <button class="dcls" onclick="closeD()">✕</button>
+      <div style="display:inline-block;padding:1px 7px;border-radius:5px;font-size:10px;font-weight:700;background:#f0f4ff;color:#3730a3;margin-bottom:4px">#${t.id} · ${t.sec} · ${spBadge}</div>
+      <div class="dt">${t.nm}</div>
+      <div class="ds-sub">Level ${t.lvl} · ${t.dur}d · ${t.res.join(', ')||'no resources'}</div>
+    </div>
+    <div class="db">
+      <div class="abox ${urgCls}"><div class="ah">${urgLbl}</div>
+        ${t.shifted?`<p>Original: ${t.origS} → Current: ${t.s} (${diffDays(t.s,t.origS)>0?'+':''}${diffDays(t.s,t.origS)} days)</p>`:''}
+      </div>
+      <div class="db-sec"><h3>Edit Schedule</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+          <div><div style="font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Start Date</div><input class="einp" id="ds" value="${t.s}" type="date"></div>
+          <div><div style="font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Finish Date</div><input class="einp" id="df" value="${t.e}" type="date"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+          <div><div style="font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Status</div>
+            <select class="esel" id="dstat">
+              <option value="0" ${t.pct===0?'selected':''}>Not Started</option>
+              <option value="50" ${t.pct===50?'selected':''}>In Progress</option>
+              <option value="100" ${t.pct===100?'selected':''}>Complete</option>
+            </select>
+          </div>
+          <div><div style="font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Previous date (if moved)</div>
+            <input class="einp" id="dprev" value="${t.origS!==t.s?t.origS:''}" placeholder="${t.origS}" type="date">
+          </div>
+        </div>
+        <div style="margin-bottom:6px"><div style="font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Notes</div>
+          <textarea class="einp" id="dnotes" rows="2" style="resize:none">${t.note||''}</textarea>
+        </div>
+        <button class="action-btn green" onclick="saveD(${t.id})">Save &amp; Cascade → SharePoint</button>
+        <button class="action-btn gold" onclick="selTask(${t.id});showV('reminders',document.querySelectorAll('.tab')[2]);closeD()">Compose Reminder</button>
+      </div>
+      ${preds?`<div class="db-sec"><h3>Predecessors (must finish first)</h3>${preds}</div>`:''}
+      ${succs?`<div class="db-sec"><h3>Successors (waiting on this)</h3>${succs}</div>`:''}
+      ${ctInfo?`<div class="db-sec"><h3>Contacts</h3>${ctInfo}</div>`:''}
+    </div>`;
+  document.getElementById('overlay').classList.add('open');
+}
+
+async function saveD(id){
+  const t=taskMap[id];if(!t)return;
+  const newS=document.getElementById('ds').value;
+  const prevInput=document.getElementById('dprev').value;
+  const oldPct=t.pct;
+  if(prevInput&&prevInput!==t.origS) t.origS=prevInput;
+  t.pct=parseInt(document.getElementById('dstat').value);
+  t.note=document.getElementById('dnotes').value;
+  const statusChanged=t.pct!==oldPct;
+  if(newS&&newS!==t.s){
+    const pinned={};pinned[id]=newS;
+    if(shiftOffset!==0){
+      Object.values(taskMap).filter(x=>!x.preds.length&&x.id>0).forEach(x=>{if(!pinned[x.id])pinned[x.id]=addDays(x.origS,shiftOffset);});
+    }
+    cascade(pinned);
+    logChange('TASK',`Task #${id} rescheduled: ${t.nm}`,`${t.origS} → ${newS} · Successors cascaded`);
+  }
+  if(statusChanged){
+    logChange('STATUS',`Task #${id} status: ${t.nm}`,`${t.pct===100?'Complete':t.pct===50?'In Progress':'Not Started'}`);
+  }
+  document.getElementById('overlay').classList.remove('open');
+  renderSchedule();updateCounts();renderUpcoming();
+  if(document.getElementById('v-gantt').style.display!=='none')renderGantt();
+  // Save to SharePoint immediately
+  setSyncState('syncing',`Saving Task #${id} to SharePoint...`);
+  const ok=await saveTaskToSP(id);
+  if(ok){
+    setSyncState('ok',`Task #${id} saved to SharePoint · ${new Date().toLocaleTimeString()}`);
+    toast(`Task #${id} saved to SharePoint`, 'success');
+  } else {
+    setSyncState('error',`Could not save Task #${id} — click "Push all" to retry`);
+    toast(`Save failed — will retry on Push All`, 'error');
+  }
+}
+
+function closeD(e){if(!e||e.target===document.getElementById('overlay'))document.getElementById('overlay').classList.remove('open');}
+
+function renderAll(){
+  renderSchedule();updateCounts();renderUpcoming();renderChangelog();
+  if(document.getElementById('v-gantt').style.display!=='none')renderGantt();
+  if(document.getElementById('v-contacts').style.display!=='none')renderContacts();
+}
+
+function showV(v,el){
+  ['schedule','gantt','reminders','contacts','changelog'].forEach(x=>document.getElementById('v-'+x).style.display=x===v?'block':'none');
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  if(el)el.classList.add('active');
+  if(v==='gantt')renderGantt();
+  if(v==='contacts')renderContacts();
+  if(v==='changelog')renderChangelog();
+  if(v==='reminders')renderUpcoming();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// INIT — runs when page loads
+// ═══════════════════════════════════════════════════════════════════
+(async function init(){
+  buildTaskMap();
+  // Set today's date
+  const todayStr = new Date().toISOString().slice(0,10);
+  document.getElementById('today-inp').value = todayStr;
+  // Render baseline immediately so user sees the tool straight away
+  renderAll();
+  // Then connect to SharePoint in background
+  await getCurrentUser();
+  await getRequestDigest();
+  await syncFromSP();
+  // Auto-refresh every 5 minutes
+  setInterval(()=>{ syncFromSP(); }, 5 * 60 * 1000);
+})();
+</script>
+</body>
+</html>
